@@ -9,7 +9,7 @@ import sys
 import traceback
 from fastapi import FastAPI
 
-# 🔥 FIX IMPORT PATH (CLAVE PARA RENDER)
+# FIX IMPORT PATH
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
@@ -41,7 +41,7 @@ def health():
 
 
 # ===============================
-# DIAGNOSTIC SYSTEM CHECK
+# DIAGNOSTIC
 # ===============================
 
 @app.get("/diagnostic")
@@ -57,28 +57,28 @@ def diagnostic():
 
     # FOUNDATION
     try:
-        from foundation.system_core.bootstrap import SystemBootstrap
+        import foundation
         report["foundation"] = True
     except Exception as e:
         report["errors"].append(f"foundation: {str(e)}")
 
     # ENGINES
     try:
-        from engines.economic_engine.bootstrap import EconomicEngineBootstrap
+        import engines
         report["engines"] = True
     except Exception as e:
         report["errors"].append(f"engines: {str(e)}")
 
     # PROTOCOL
     try:
-        from protocol.event_bus.core_event_bus import CoreEventBus
+        import protocol
         report["protocol"] = True
     except Exception as e:
         report["errors"].append(f"protocol: {str(e)}")
 
     # APPS
     try:
-        from apps.nexo.bootstrap import NexoBootstrap
+        import apps
         report["apps"] = True
     except Exception as e:
         report["errors"].append(f"apps: {str(e)}")
