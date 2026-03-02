@@ -10,14 +10,16 @@ import sys
 import traceback
 import importlib
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 
 # ===============================
 # FIX IMPORT PATH
 # ===============================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 if BASE_DIR not in sys.path:
-    sys.path.append(BASE_DIR)
+    sys.path.insert(0, BASE_DIR)
 
 app = FastAPI(title="ZYRA CORE")
 
@@ -56,18 +58,17 @@ def full_system_scan():
         "failed": [],
     }
 
-    for root, dirs, files in os.walk(BASE_DIR):
+    for root_dir, dirs, files in os.walk(BASE_DIR):
 
         # evitar carpetas irrelevantes
-        if any(skip in root for skip in ["__pycache__", ".venv", "venv", ".git"]):
+        if any(skip in root_dir for skip in ["__pycache__", ".venv", "venv", ".git"]):
             continue
 
         for file in files:
-            if file.endswith(".py"):
+            if file.endswith(".py") and file != "main.py":
 
-                full_path = os.path.join(root, file)
+                full_path = os.path.join(root_dir, file)
 
-                # convertir a ruta de módulo python
                 module_path = os.path.relpath(full_path, BASE_DIR)
                 module_path = module_path.replace(os.sep, ".")
                 module_path = module_path.replace(".py", "")
@@ -92,7 +93,10 @@ def full_system_scan():
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
-    return {
-        "error": str(exc),
-        "trace": traceback.format_exc()
-    }
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": str(exc),
+            "trace": traceback.format_exc()
+        }
+    )
