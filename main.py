@@ -2,14 +2,19 @@
 ZYRA CORE
 Sistema Soberano Base
 Entry Point Oficial API
+ESCANEO COMPLETO REAL
 """
 
 import os
 import sys
 import traceback
+import importlib
 from fastapi import FastAPI
 
+# ===============================
 # FIX IMPORT PATH
+# ===============================
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
@@ -35,53 +40,48 @@ def root():
 
 @app.get("/health")
 def health():
-    return {
-        "status": "ok"
-    }
+    return {"status": "ok"}
 
 
 # ===============================
-# DIAGNOSTIC
+# FULL SYSTEM SCAN
 # ===============================
 
-@app.get("/diagnostic")
-def diagnostic():
+@app.get("/scan")
+def full_system_scan():
 
     report = {
-        "foundation": False,
-        "engines": False,
-        "protocol": False,
-        "apps": False,
-        "errors": []
+        "total_files": 0,
+        "imported_ok": [],
+        "failed": [],
     }
 
-    # FOUNDATION
-    try:
-        import foundation
-        report["foundation"] = True
-    except Exception as e:
-        report["errors"].append(f"foundation: {str(e)}")
+    for root, dirs, files in os.walk(BASE_DIR):
 
-    # ENGINES
-    try:
-        import engines
-        report["engines"] = True
-    except Exception as e:
-        report["errors"].append(f"engines: {str(e)}")
+        # evitar carpetas irrelevantes
+        if any(skip in root for skip in ["__pycache__", ".venv", "venv", ".git"]):
+            continue
 
-    # PROTOCOL
-    try:
-        import protocol
-        report["protocol"] = True
-    except Exception as e:
-        report["errors"].append(f"protocol: {str(e)}")
+        for file in files:
+            if file.endswith(".py"):
 
-    # APPS
-    try:
-        import apps
-        report["apps"] = True
-    except Exception as e:
-        report["errors"].append(f"apps: {str(e)}")
+                full_path = os.path.join(root, file)
+
+                # convertir a ruta de módulo python
+                module_path = os.path.relpath(full_path, BASE_DIR)
+                module_path = module_path.replace(os.sep, ".")
+                module_path = module_path.replace(".py", "")
+
+                report["total_files"] += 1
+
+                try:
+                    importlib.import_module(module_path)
+                    report["imported_ok"].append(module_path)
+                except Exception as e:
+                    report["failed"].append({
+                        "module": module_path,
+                        "error": str(e)
+                    })
 
     return report
 
