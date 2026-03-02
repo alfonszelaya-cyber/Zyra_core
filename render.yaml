@@ -1,1 +1,26 @@
+services:
+  - type: web
+    name: zyra-core
+    runtime: python
+    plan: starter
+    region: oregon
 
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+
+    startCommand: |
+      python main.py
+
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+
+      - key: ENVIRONMENT
+        value: production
+
+      - key: ZYRA_MODE
+        value: sovereign
+
+      - key: LOG_LEVEL
+        value: INFO
