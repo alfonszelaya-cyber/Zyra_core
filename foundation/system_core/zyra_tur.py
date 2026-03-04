@@ -3,7 +3,7 @@
 
 import datetime
 
-from foundation.system_core.system_constants import (
+from foundation.system_core.module_config import (
     SensitiveAction,
     ROLE_ROOT,
     ROLE_SYSTEM
