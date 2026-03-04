@@ -1,15 +1,19 @@
 # ==========================================================
 # audit_events.py
-# NEXO / ZYRA — AUDITORÍA & TRAZABILIDAD
+# ZYRA CORE — AUDITORÍA & TRAZABILIDAD
+# EVENTOS DE AUDITORÍA DEL SISTEMA
 # PASIVO | SOLO EMITE
 # ==========================================================
 
-from infrastructure.events.emit_events import emit_events
+from protocol.event_bus.emit_events import emit_events
 
 
-def emit_audit_event(event_name: str, payload: dict):
+def emit_audit_event(event_name: str, payload: dict) -> None:
+    """
+    Emite eventos del sistema de auditoría.
+    """
     emit_events("core", {
-        "module": "AUDITORIA",
+        "module": "AUDIT",
         "event": event_name,
         "payload": payload
     })
