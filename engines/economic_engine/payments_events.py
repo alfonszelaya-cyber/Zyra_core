@@ -1,14 +1,18 @@
 # ============================================================
 # payments_events.py
-# NEXO / ZYRA — PAGOS & BANCOS
+# ZYRA CORE — PAGOS & BANCOS
 # EVENTOS DE PAGOS
 # PASIVO | SOLO EMITE
 # ============================================================
 
-from infrastructure.events.emit_events import emit_events
+from protocol.event_bus.emit_events import emit_events
 
-def emit_payment_event(event_name: str, payload: dict):
-    emit_event("business", {
+
+def emit_payment_event(event_name: str, payload: dict) -> None:
+    """
+    Emite eventos relacionados con pagos.
+    """
+    emit_events("business", {
         "module": "PAYMENTS",
         "event": event_name,
         "payload": payload
