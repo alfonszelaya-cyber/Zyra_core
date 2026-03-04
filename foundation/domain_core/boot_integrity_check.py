@@ -1,81 +1,117 @@
-# ============================================================
-# boot_integrity_check.py
-# NEXO / ZYRA — CHEQUEO DE INTEGRIDAD DE ARRANQUE
-# CORE | PRE-BOOT | INMUTABLE | AUDITABLE | 10+ AÑOS
-# ============================================================
+# tax_declarations.py
+# NEXO — MOTOR DE DECLARACIONES
 
-from domain.security.integrity_checker import run_boot_integrity, BOOT_OK, BOOT_SAFE, BOOT_HALT
+import os
+import json
 from datetime import datetime
 
-# ============================================================
-# ESTADO GLOBAL DE ARRANQUE
-# ============================================================
+from engines.economic_engine.domain.accounting_engine import libro_por_empresa
+from foundation.ledger.core_ledger import ledger_record
 
-BOOT_RESULT = None
-BOOT_TIMESTAMP = None
-BOOT_REPORT = None
 
-# ============================================================
-# EJECUCIÓN PRINCIPAL
-# ============================================================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-def execute_boot_check(base_dir: str = None) -> dict:
-    """
-    Ejecuta el chequeo de integridad del CORE antes del arranque.
+DATA_DIR = os.path.join(BASE_DIR, "data")
+os.makedirs(DATA_DIR, exist_ok=True)
 
-    Retorna:
-    {
-        "boot": BOOT_OK | BOOT_SAFE | BOOT_HALT,
-        "integrity": {...},
-        "timestamp": str
+DECLARATIONS_DIR = os.path.join(DATA_DIR, "declarations")
+os.makedirs(DECLARATIONS_DIR, exist_ok=True)
+
+
+def _save(path, data):
+
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+
+def _now():
+    return datetime.now().isoformat()
+
+
+def calcular_acumulados(empresa_id, mes=None, anio=None):
+
+    libro = libro_por_empresa(empresa_id)
+
+    total_ingresos = 0.0
+    total_gastos = 0.0
+
+    for a in libro:
+
+        fecha = datetime.fromisoformat(a["ts"])
+
+        if mes and fecha.month != mes:
+            continue
+
+        if anio and fecha.year != anio:
+            continue
+
+        if a.get("credito") == "INGRESOS":
+            total_ingresos += a.get("monto", 0)
+
+        if a.get("debito") in ("GASTOS", "COSTOS"):
+            total_gastos += a.get("monto", 0)
+
+    return {
+        "ingresos": round(total_ingresos, 2),
+        "gastos": round(total_gastos, 2),
+        "utilidad": round(total_ingresos - total_gastos, 2),
     }
-    """
-    global BOOT_RESULT, BOOT_TIMESTAMP, BOOT_REPORT
 
-    result = run_boot_integrity(base_dir)
 
-    BOOT_RESULT = result.get("boot")
-    BOOT_TIMESTAMP = datetime.utcnow().isoformat()
-    BOOT_REPORT = {
-        "boot": BOOT_RESULT,
-        "integrity": result.get("integrity"),
-        "timestamp": BOOT_TIMESTAMP
+def generar_declaracion_mensual(empresa_id, pais, mes, anio):
+
+    acumulados = calcular_acumulados(empresa_id, mes, anio)
+
+    declaracion = {
+        "empresa": empresa_id,
+        "pais": pais,
+        "tipo": "MENSUAL",
+        "mes": mes,
+        "anio": anio,
+        "datos": acumulados,
+        "estado": "BORRADOR",
+        "generado": _now(),
     }
 
-    return BOOT_REPORT
+    fname = f"{empresa_id}_{pais}_{anio}_{mes}_mensual.json"
 
-# ============================================================
-# UTILIDADES DE CONSULTA
-# ============================================================
+    path = os.path.join(DECLARATIONS_DIR, fname)
 
-def get_boot_status() -> str:
-    """
-    Devuelve el estado actual del boot:
-    BOOT_OK | BOOT_SAFE | BOOT_HALT | NONE
-    """
-    return BOOT_RESULT or "NONE"
+    _save(path, declaracion)
 
-def is_boot_allowed() -> bool:
-    """
-    Indica si el sistema puede continuar arrancando.
-    """
-    return BOOT_RESULT in (BOOT_OK, BOOT_SAFE)
+    ledger_record(
+        event="DECLARACION_MENSUAL_GENERADA",
+        status="BORRADOR",
+        detail=declaracion
+    )
 
-def get_boot_report() -> dict:
-    """
-    Devuelve el último reporte completo de integridad.
-    """
-    return BOOT_REPORT or {}
+    return declaracion
 
-# ============================================================
-# NOTAS DE DISEÑO
-# ============================================================
-# - NO imprime
-# - NO detiene el sistema por sí solo
-# - Boot_controller decide qué hacer
-# - Compatible con SAFE MODE
-# - Compatible con auditoría legal
-# - Diseñado para 10+ años
-# - Sin dependencias externas
-# - CORE SILICON GRADE
-# ============================================================
+
+def generar_declaracion_anual(empresa_id, pais, anio):
+
+    acumulados = calcular_acumulados(empresa_id, None, anio)
+
+    declaracion = {
+        "empresa": empresa_id,
+        "pais": pais,
+        "tipo": "ANUAL",
+        "anio": anio,
+        "datos": acumulados,
+        "estado": "BORRADOR",
+        "generado": _now(),
+    }
+
+    fname = f"{empresa_id}_{pais}_{anio}_anual.json"
+
+    path = os.path.join(DECLARATIONS_DIR, fname)
+
+    _save(path, declaracion)
+
+    ledger_record(
+        event="DECLARACION_ANUAL_GENERADA",
+        status="BORRADOR",
+        detail=declaracion
+    )
+
+    return declaracion
