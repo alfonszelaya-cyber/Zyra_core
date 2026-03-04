@@ -1,112 +1,150 @@
-# ============================================================
-# zyra_core_intelligence.py
-# NÚCLEO INTEGRAL DE JAZA GLOBAL SYSTEMS
-# El Camaleón: Observa, Evalúa y Actúa en cualquier sector
-# Persistencia de datos ≥10 años
-# ============================================================
+# =========================================
+# operations_core.py
+# ZYRA CORE — OPERATIONS CORE
+# Base única de operaciones | Inmutable | Auditable | Event-driven
+# =========================================
 
+from datetime import datetime
 import json
 import os
-from datetime import datetime
+from uuid import uuid4
+
+# EVENT BUS NUEVO
 from protocol.event_bus.emit_events import emit_events
 
-class ZyraCoreRadar:
+# LEDGER NUEVO
+from foundation.ledger.core_ledger import ledger_record
+
+# LOGGING
+from infrastructure.monitoring_adapters.logging.zyra_logs_hook import log
+
+
+# -------------------------
+# PATHS
+# -------------------------
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+
+os.makedirs(DATA_DIR, exist_ok=True)
+
+OPERATIONS_FILE = os.path.join(DATA_DIR, "operations.json")
+
+
+# -------------------------
+# UTILIDADES
+# -------------------------
+
+def _now():
+    return datetime.utcnow().isoformat()
+
+
+def _load(path, default):
+    if not os.path.exists(path):
+        return default
+
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return default
+
+
+def _save(path, data):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+
+# -------------------------
+# REGISTRO DE OPERACIÓN
+# -------------------------
+
+def registrar_operacion(
+    tipo_operacion,
+    monto,
+    moneda="USD",
+    origen=None,
+    destino=None,
+    estado="PENDIENTE",
+    metadata=None
+):
     """
-    El corazón de Zyra: procesa cualquier identificador (VIN, DNI, Registro)
-    y decide la viabilidad del negocio de forma autónoma.
+    tipo_operacion: VENTA | COMPRA | TRANSFERENCIA | PAGO | COBRO | AJUSTE
     """
 
-    def __init__(self):
-        self.log_path = "data/core_universal_history.json"
-        os.makedirs("data", exist_ok=True)
+    operacion = {
+        "operation_id": f"OP-{uuid4().hex[:10].upper()}",
+        "tipo": tipo_operacion,
+        "monto": monto,
+        "moneda": moneda,
+        "origen": origen,
+        "destino": destino,
+        "estado": estado,
+        "metadata": metadata or {},
+        "ts": _now()
+    }
 
-    def escanear_dato_universal(
-        self,
-        sector: str,
-        id_referencia: str,
-        fuente: str,
-        permiso: bool = False
-    ) -> dict:
-        """
-        Punto de entrada único para cualquier operación de JAZA Global.
-        """
-        # 1. Consulta automatizada según sector y fuente
-        raw_data = self._consultar_fuentes(sector, id_referencia, fuente)
+    # -------------------------
+    # PERSISTENCIA
+    # -------------------------
 
-        # 2. Evaluación de riesgo y rentabilidad
-        analisis = self._procesar_inteligencia(sector, id_referencia, raw_data, permiso)
+    operaciones = _load(OPERATIONS_FILE, [])
+    operaciones.append(operacion)
+    _save(OPERATIONS_FILE, operaciones)
 
-        # 3. Limpieza automática de datos temporales
-        self._limpieza_automatica()
+    # -------------------------
+    # LEDGER
+    # -------------------------
 
-        # 4. Guardado de memoria a largo plazo (≥10 años)
-        self._guardar_memoria_largo_plazo(analisis)
+    ledger_record(
+        event="OPERACION_REGISTRADA",
+        status=estado,
+        detail=operacion
+    )
 
-        # 5. Emisión de evento al sistema nervioso de NEXO
-        emit("CORE_DECISION", source="ZYRA_CORE", payload=analisis)
+    # -------------------------
+    # EVENTO DEL SISTEMA
+    # -------------------------
 
-        return analisis
-
-    def _consultar_fuentes(self, sector: str, ident: str, fuente: str) -> dict:
-        """
-        Obtiene información del sector según tipo de activo o cliente.
-        """
-        if sector in ["IMPORT_AUTOS", "SUBASTAS"]:
-            return {
-                "tipo": "ACTIVO_MOVIL",
-                "valor_mercado": 25000,
-                "riesgo": "GOLPE_LEVE",
-                "roi_est": 0.25
-            }
-        elif sector in ["BANCO", "CREDITOS"]:
-            return {
-                "tipo": "PERFIL_FINANCIERO",
-                "comportamiento": "PAGADOR_PUNTUAL",
-                "riesgo_impago": 0.05
-            }
-        return {"tipo": "GENERAL", "status": "AUDITADO"}
-
-    def _procesar_inteligencia(self, sector: str, ref: str, datos: dict, permiso: bool) -> dict:
-        """
-        Evalúa nivel de riesgo y rentabilidad.
-        """
-        riesgo = 4 if datos.get("riesgo_impago", 0) > 0.30 else 1
-        rentabilidad = "ALTA" if datos.get("roi_est", 0) > 0.20 else "PROMEDIO"
-
-        return {
-            "ts": datetime.utcnow().isoformat(),
-            "sector": sector.upper(),
-            "referencia": ref,
-            "diagnostico": f"Evaluación de {sector} completada con éxito.",
-            "nivel_riesgo": riesgo,       # 1: Bajo, 4: Crítico
-            "rentabilidad": rentabilidad,
-            "permiso_verificado": permiso,
-            "accion": "EJECUTAR_INVERSION" if riesgo < 3 else "RECHAZAR_BLOQUEAR"
+    emit_events(
+        "business",
+        {
+            "module": "OPERATIONS_CORE",
+            "event": "OPERACION_REGISTRADA",
+            "payload": operacion
         }
+    )
 
-    def _guardar_memoria_largo_plazo(self, data: dict):
-        """
-        Guarda registros importantes por ≥10 años.
-        """
-        historico = []
-        if os.path.exists(self.log_path):
-            with open(self.log_path, "r", encoding="utf-8") as f:
-                try:
-                    historico = json.load(f)
-                except Exception:
-                    historico = []
+    # -------------------------
+    # LOG
+    # -------------------------
 
-        historico.append(data)
-        with open(self.log_path, "w", encoding="utf-8") as f:
-            json.dump(historico, f, indent=2)
+    log(
+        "INFO",
+        f"Operación {operacion['operation_id']} registrada",
+        "OPERATIONS_CORE"
+    )
 
-    def _limpieza_automatica(self):
-        """
-        Limpieza de datos temporales de corta duración (<30 días).
-        """
-        pass  # Implementación interna de purga temporal
+    return operacion
 
-# ------------------------------------------------------------
-# Instancia del núcleo Zyra
-# ------------------------------------------------------------
-zyra_core = ZyraCoreRadar()
+
+# -------------------------
+# CONSULTAS
+# -------------------------
+
+def operaciones_por_tipo(tipo):
+    return [
+        o for o in _load(OPERATIONS_FILE, [])
+        if o["tipo"] == tipo
+    ]
+
+
+def operaciones_por_estado(estado):
+    return [
+        o for o in _load(OPERATIONS_FILE, [])
+        if o["estado"] == estado
+    ]
+
+
+def historial_operaciones():
+    return _load(OPERATIONS_FILE, [])
