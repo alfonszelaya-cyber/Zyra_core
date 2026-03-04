@@ -4,7 +4,7 @@
 # Enterprise 3.0 – Clean Architecture
 # ============================================================
 
-from Core.module.template.template_registry import get_template
+from foundation.ledger.core_ledger import ledger_record
 
 
 class GenerateSalesFinanceReportUseCase:
