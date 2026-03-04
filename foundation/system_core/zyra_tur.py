@@ -3,10 +3,7 @@
 
 import datetime
 
-from foundation.system_core.module_config import (
-    SensitiveAction,
-    ROLE_ROOT,
-    ROLE_SYSTEM
+from foundation.system_core.system_constants import SensitiveAction, ROLE_ROOT, ROLE_SYSTEM
 )
 
 _COUNTRY_CONTEXT = {
