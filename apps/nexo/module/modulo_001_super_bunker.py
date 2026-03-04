@@ -4,7 +4,7 @@
 # SEGURIDAD SUPREMA · 3 CAPAS · CONSOLA PYTHON
 # =====================================================
 
-from infrastructure.events.zyra_bus import emit
+from protocol.event_bus.emit_events import emit_events
 
 # -------------------------
 # UTILIDADES
