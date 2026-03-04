@@ -1,13 +1,14 @@
-# ============================================================
 # zyra_tur.py
 # ZYRA Trusted Universal Resolver (TUR)
-# Resolución confiable de país, moneda, rol y nivel
-# ============================================================
 
 import datetime
-from core.system_constants import SensitiveAction, ROLE_ROOT, ROLE_SYSTEM
 
-# Base extensible (NO hardcode frágil)
+from foundation.system_core.system_constants import (
+    SensitiveAction,
+    ROLE_ROOT,
+    ROLE_SYSTEM
+)
+
 _COUNTRY_CONTEXT = {
     "US": {"currency": "USD"},
     "GT": {"currency": "GTQ"},
@@ -26,9 +27,6 @@ _ROLE_LEVELS = {
 }
 
 
-# -------------------------
-# FUNCIONES BASE
-# -------------------------
 def resolve_country(country_code: str):
     return _COUNTRY_CONTEXT.get(country_code, _COUNTRY_CONTEXT["GLOBAL"])
 
@@ -54,25 +52,17 @@ def tur_snapshot(context: dict):
     }
 
 
-# -------------------------
-# CLASE PRINCIPAL (API)
-# -------------------------
 class ZYRA_TUR:
-    """
-    Trusted Universal Resolver
-    Motor de decisión de acceso y desbloqueo
-    """
 
     def __init__(self):
         self.engine_name = "ZYRA_TUR"
         self.version = "1.0.0"
 
     def authorize(self, role: str, action: SensitiveAction) -> bool:
-        # ROOT y SYSTEM pueden todo
+
         if role in (ROLE_ROOT, ROLE_SYSTEM):
             return True
 
-        # Acciones básicas
         if action == SensitiveAction.VIEW:
             return True
 
@@ -85,6 +75,7 @@ class ZYRA_TUR:
         return False
 
     def resolve_context(self, role: str, country_code: str):
+
         country = resolve_country(country_code)
         level = resolve_access_level(role)
 
