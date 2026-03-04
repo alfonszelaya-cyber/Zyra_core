@@ -4,7 +4,7 @@
 # Arquitectura estable y coherente con tu dominio actual
 # ============================================================
 
-from domain.finance.ledger import ledger_record
+from foundation.ledger.core_ledger import ledger_record
 
 
 class CreateLedgerEntryUseCase:
