@@ -1,14 +1,18 @@
 # ============================================================
 # tax_events.py
-# NEXO / ZYRA — FISCAL / IMPUESTOS
+# ZYRA CORE — FISCAL / IMPUESTOS
 # EVENTOS FISCALES
 # PASIVO | SOLO EMITE
 # ============================================================
 
-from infrastructure.events.emit_events import emit_events
+from protocol.event_bus.emit_events import emit_events
 
-def emit_tax_event(event_name: str, payload: dict):
-    emit_event("business", {
+
+def emit_tax_event(event_name: str, payload: dict) -> None:
+    """
+    Emite eventos fiscales del sistema.
+    """
+    emit_events("business", {
         "module": "TAX",
         "event": event_name,
         "payload": payload
