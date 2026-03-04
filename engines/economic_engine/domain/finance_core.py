@@ -7,7 +7,7 @@
 import os
 import requests
 from datetime import datetime
-from foundation.ledger.core_ledger import ledger_record
+from foundation.domain_core import
 
 COINGECKO_URL = "https://api.coingecko.com/api/v3/simple/price"
 
