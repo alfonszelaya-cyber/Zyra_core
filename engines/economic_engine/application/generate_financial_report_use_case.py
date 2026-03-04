@@ -5,7 +5,7 @@
 # ============================================================
 
 from copy import deepcopy
-from Core.module.template.template_registry import get_template
+from foundation.ledger.core_ledger import ledger_record
 
 
 class GenerateSalesFinanceReportUseCase:
