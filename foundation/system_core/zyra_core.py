@@ -4,24 +4,27 @@
 import time
 from typing import Any, Dict, Optional
 
-from core.zyra_ledger_hook import ledger_record
-from core.zyra_bus import emit
-from core.zyra_logs_hook import log
+from foundation.ledger.core_ledger import ledger_record
+from protocol.event_bus.zyra_bus import emit
+from infrastructure.monitoring_adapters.logging.zyra_logs_hook import log
+
 
 SYSTEM_STATE: Dict[str, Any] = {
     "boot_time": None,
     "events_count": 0
 }
 
+
 def zyra_core_init() -> None:
+
     if SYSTEM_STATE["boot_time"] is not None:
         return
 
     SYSTEM_STATE["boot_time"] = time.time()
 
     log(
-        event="ZYRA CORE cargado",
         level="INFO",
+        message="ZYRA CORE cargado",
         source="ZYRA_CORE"
     )
 
