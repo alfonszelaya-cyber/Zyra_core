@@ -1,15 +1,24 @@
+# =========================================
 # operations_core.py
-# ZYRA OPERATIONS CORE
+# ZYRA / NEXO — OPERATIONS CORE
+# Registro central de operaciones
+# Inmutable | Auditable | Event-Driven
+# =========================================
 
 from datetime import datetime
 import json
 import os
 from uuid import uuid4
 
+# ZYRA CORE IMPORTS (arquitectura nueva)
 from protocol.event_bus.emit_events import emit_events
 from foundation.ledger.core_ledger import ledger_record
 from infrastructure.monitoring_adapters.logging.zyra_logs_hook import log
 
+
+# =========================================
+# PATHS
+# =========================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -18,6 +27,10 @@ os.makedirs(DATA_DIR, exist_ok=True)
 
 OPERATIONS_FILE = os.path.join(DATA_DIR, "operations.json")
 
+
+# =========================================
+# UTILIDADES INTERNAS
+# =========================================
 
 def _now():
     return datetime.utcnow().isoformat()
@@ -31,6 +44,7 @@ def _load(path, default):
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
+
     except Exception:
         return default
 
@@ -40,6 +54,10 @@ def _save(path, data):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
+
+# =========================================
+# REGISTRO DE OPERACIÓN
+# =========================================
 
 def registrar_operacion(
     tipo_operacion,
@@ -63,17 +81,31 @@ def registrar_operacion(
         "ts": _now()
     }
 
+    # -------------------------
+    # Persistencia
+    # -------------------------
+
     operaciones = _load(OPERATIONS_FILE, [])
 
     operaciones.append(operacion)
 
     _save(OPERATIONS_FILE, operaciones)
 
+
+    # -------------------------
+    # Ledger global ZYRA
+    # -------------------------
+
     ledger_record(
         event="OPERACION_REGISTRADA",
         status=estado,
         detail=operacion
     )
+
+
+    # -------------------------
+    # Event Bus ZYRA
+    # -------------------------
 
     emit_events(
         "business",
@@ -84,22 +116,39 @@ def registrar_operacion(
         }
     )
 
+
+    # -------------------------
+    # Log del sistema
+    # -------------------------
+
     log(
         "INFO",
-        f"Operación {operacion['operation_id']} registrada",
+        f"Operación registrada {operacion['operation_id']}",
         "OPERATIONS_CORE"
     )
+
 
     return operacion
 
 
+# =========================================
+# CONSULTAS
+# =========================================
+
 def operaciones_por_tipo(tipo):
-    return [o for o in _load(OPERATIONS_FILE, []) if o["tipo"] == tipo]
+
+    operaciones = _load(OPERATIONS_FILE, [])
+
+    return [o for o in operaciones if o.get("tipo") == tipo]
 
 
 def operaciones_por_estado(estado):
-    return [o for o in _load(OPERATIONS_FILE, []) if o["estado"] == estado]
+
+    operaciones = _load(OPERATIONS_FILE, [])
+
+    return [o for o in operaciones if o.get("estado") == estado]
 
 
 def historial_operaciones():
+
     return _load(OPERATIONS_FILE, [])
