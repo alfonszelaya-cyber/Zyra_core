@@ -6,8 +6,8 @@
 import os
 import importlib.util
 
-# BASE_DIR correcto (raíz Nexo_Jazaglobal)
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+# BASE_DIR correcto (raíz del proyecto)
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 # ---------- helpers seguros ----------
 def clear():
@@ -18,18 +18,21 @@ def header():
     print("                ZYRA / NEXO CORE SYSTEM                     ")
     print("============================================================")
 
-# ledger_record seguro (si existe en core)
+# ledger_record seguro
 try:
-    from core.ledger import ledger_record
-except:
+    from foundation.ledger.core_ledger import ledger_record
+except Exception:
     def ledger_record(msg):
         print(f"[LEDGER] {msg}")
 
 # ============================================================
 # CARGADOR SEGURO
 # ============================================================
+
 def load_module(file, func):
-    path = os.path.join(BASE_DIR, "module", file)  # 👈 module (no modules)
+
+    path = os.path.join(BASE_DIR, "module", file)
+
     if not os.path.exists(path):
         return None
 
@@ -38,11 +41,13 @@ def load_module(file, func):
     spec.loader.exec_module(mod)
 
     ledger_record(file.replace(".py", "") + " cargado")
+
     return getattr(mod, func, None)
 
 # ============================================================
-# ROOT CONTROLLER
+# ROOT CONTROLLER (MENÚ SISTEMA)
 # ============================================================
+
 def root_controller():
 
     ledger_record("ROOT_CONTROLLER_STARTED")
@@ -60,8 +65,10 @@ def root_controller():
     mod_001 = load_module("modulo_001_super_bunker.py", "modulo_001_super_bunker")
 
     while True:
+
         clear()
         header()
+
         print("""
 --- NEXO / ZYRA ROOT ---
 1) Status del sistema
@@ -75,7 +82,7 @@ def root_controller():
 9) Modulo 8 Gobierno
 10) Modulo 9 Meta Gobierno
 11) Modulo 10 Atencion Al Cliente
-12) Módulo 001 Super Búnker
+12) Modulo 001 Super Bunker
 0) Salir
 """)
 
@@ -84,20 +91,65 @@ def root_controller():
         if cmd == "1":
             input("\nSistema OK [ENTER]")
 
-        elif cmd == "2" and mod_1: mod_1()
-        elif cmd == "3" and mod_2: mod_2()
-        elif cmd == "4" and mod_3: mod_3()
-        elif cmd == "5" and mod_4: mod_4()
-        elif cmd == "6" and mod_5: mod_5()
-        elif cmd == "7" and mod_6: mod_6()
-        elif cmd == "8" and mod_7: mod_7()
-        elif cmd == "9" and mod_8: mod_8()
-        elif cmd == "10" and mod_9: mod_9()
-        elif cmd == "11" and mod_10: mod_10()
-        elif cmd == "12" and mod_001: mod_001()
+        elif cmd == "2" and mod_1:
+            mod_1()
+
+        elif cmd == "3" and mod_2:
+            mod_2()
+
+        elif cmd == "4" and mod_3:
+            mod_3()
+
+        elif cmd == "5" and mod_4:
+            mod_4()
+
+        elif cmd == "6" and mod_5:
+            mod_5()
+
+        elif cmd == "7" and mod_6:
+            mod_6()
+
+        elif cmd == "8" and mod_7:
+            mod_7()
+
+        elif cmd == "9" and mod_8:
+            mod_8()
+
+        elif cmd == "10" and mod_9:
+            mod_9()
+
+        elif cmd == "11" and mod_10:
+            mod_10()
+
+        elif cmd == "12" and mod_001:
+            mod_001()
 
         elif cmd == "0":
             ledger_record("SYSTEM_EXIT")
             break
+
         else:
             input("Comando inválido [ENTER]")
+
+
+# ============================================================
+# BOOT SYSTEM (API / FASTAPI)
+# ============================================================
+
+def boot_system():
+
+    try:
+
+        ledger_record("BOOT_SYSTEM_START")
+
+        return {
+            "boot": "OK",
+            "controller": "ROOT_CONTROLLER_READY"
+        }
+
+    except Exception as e:
+
+        return {
+            "boot": "FAILED",
+            "error": str(e)
+        }
