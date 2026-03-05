@@ -1,56 +1,53 @@
 """
 ZYRA CORE
-APPS REGISTRY
+AUTO APPS REGISTRY
 
-Registro central de todas las apps del ecosistema.
-Permite que ZYRA detecte, active y gestione aplicaciones.
-
-Diseñado para:
-NEXO
-SEMILLA
-AXIS
-AGRO
-MI_PRIMER_EMPLEO
-SUBASTAS
-RECICLAJE_DIGITAL
-ARQUEOLOGIA_DIGITAL
+Descubre automáticamente todas las apps dentro de /apps
+sin tener que escribirlas manualmente.
 """
 
-APPS_REGISTRY = {
-    "nexo": "apps.nexo",
-    "semilla": "apps.semilla",
-    "axis": "apps.axis",
-    "agro": "apps.agro",
-    "mi_primer_empleo": "apps.mi_primer_empleo",
-    "subastas": "apps.subastas",
-    "reciclaje_digital": "apps.reciclaje_digital",
-    "arqueologia_digital": "apps.arqueologia_digital",
-}
+import os
+
+
+APPS_PATH = os.path.dirname(__file__)
+
+
+def _discover_apps():
+
+    apps = {}
+
+    for name in os.listdir(APPS_PATH):
+
+        path = os.path.join(APPS_PATH, name)
+
+        if not os.path.isdir(path):
+            continue
+
+        if name.startswith("__"):
+            continue
+
+        if name == "shared_domain":
+            continue
+
+        apps[name] = f"apps.{name}"
+
+    return apps
+
+
+APPS_REGISTRY = _discover_apps()
 
 
 def list_apps():
-    """
-    Devuelve todas las apps registradas
-    """
     return list(APPS_REGISTRY.keys())
 
 
 def get_app_module(app_name: str):
-    """
-    Devuelve el módulo de una app
-    """
     return APPS_REGISTRY.get(app_name)
 
 
-def app_exists(app_name: str) -> bool:
-    """
-    Verifica si una app existe
-    """
+def app_exists(app_name: str):
     return app_name in APPS_REGISTRY
 
 
 def get_registry():
-    """
-    Devuelve el registro completo
-    """
     return APPS_REGISTRY
