@@ -1,34 +1,30 @@
-from apps.nexo.domain.meta_government.institution_coordination_engine import (
-    InstitutionCoordinationEngine,
+from apps.nexo.domain.meta_government.strategy_engine import (
+    StrategyEngine,
 )
 
 
-class CoordinateInstitutionsUseCase:
+class CoordinateStrategyUseCase:
 
     def __init__(
         self,
-        institution_coordination_engine: InstitutionCoordinationEngine,
+        strategy_engine: StrategyEngine,
     ):
-        self._institution_coordination_engine = (
-            institution_coordination_engine
-        )
+        self._strategy_engine = strategy_engine
 
     def execute(
         self,
-        institutions: list,
-        objective: str,
+        strategy_id: str,
+        entities: list,
     ) -> dict:
 
-        coordination = (
-            self._institution_coordination_engine.coordinate(
-                institutions=institutions,
-                objective=objective,
-            )
+        strategy = self._strategy_engine.coordinate(
+            strategy_id=strategy_id,
+            entities=entities,
         )
 
         return {
-            "objective": objective,
-            "institutions": institutions,
-            "coordination": coordination,
-            "status": "COORDINATED",
+            "strategy_id": strategy_id,
+            "entities": entities,
+            "strategy": strategy,
+            "status": "ACTIVE",
         }
