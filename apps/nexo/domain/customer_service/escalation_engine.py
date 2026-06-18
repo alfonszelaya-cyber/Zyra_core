@@ -1,28 +1,19 @@
 from datetime import datetime
 
 
-class CustomerServiceEngine:
+class EscalationEngine:
 
-    def create_service_record(
+    def escalate(
         self,
-        client_id: str,
-        category: str,
-        description: str,
+        ticket_id: str,
+        level: int,
+        reason: str,
     ) -> dict:
 
         return {
-            "client_id": client_id,
-            "category": category,
-            "description": description,
-            "created_at": datetime.utcnow(),
-            "status": "OPEN",
+            "ticket_id": ticket_id,
+            "level": level,
+            "reason": reason,
+            "escalated_at": datetime.utcnow(),
+            "status": "ESCALATED",
         }
-
-    def close_service_record(
-        self,
-        service_record: dict,
-    ) -> dict:
-
-        service_record["status"] = "CLOSED"
-
-        return service_record
