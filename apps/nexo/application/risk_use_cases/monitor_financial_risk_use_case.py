@@ -1,28 +1,28 @@
-from apps.nexo.domain.risk.compliance_risk_engine import (
-    ComplianceRiskEngine,
+from apps.nexo.domain.risk.financial_risk_engine import (
+    FinancialRiskEngine,
 )
 
 
-class MonitorComplianceRiskUseCase:
+class MonitorFinancialRiskUseCase:
 
     def __init__(
         self,
-        compliance_risk_engine: (
-            ComplianceRiskEngine
+        financial_risk_engine: (
+            FinancialRiskEngine
         ),
     ):
-        self._compliance_risk_engine = (
-            compliance_risk_engine
+        self._financial_risk_engine = (
+            financial_risk_engine
         )
 
     def execute(
         self,
-        compliance_context: dict,
+        financial_context: dict,
     ) -> dict:
 
         monitoring = (
-            self._compliance_risk_engine.monitor(
-                compliance_context=compliance_context,
+            self._financial_risk_engine.monitor(
+                financial_context=financial_context,
             )
         )
 
