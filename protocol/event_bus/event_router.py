@@ -1,3 +1,4 @@
+
 # ============================================================
 # NEXO / ZYRA — EVENT ROUTER (BASE DEFINITIVA / GOLDEN)
 # Inmutable | Event-driven | Multimódulo | JAZA GLOBAL
@@ -57,10 +58,26 @@ EVENT_CATALOG = {
     "ALERTA_ZYRA":        ["AUDITORIA", "RIESGOS"],
     "DECISION_ZYRA":      ["AUDITORIA", "CORE"],
 
-    # 🔐 AUTH EVENTS (AGREGADO CORRECTAMENTE)
+    # 🔐 AUTH EVENTS
     "LOGIN":              ["AUDITORIA"],
     "LOGOUT":             ["AUDITORIA"],
-    "TOKEN_VALIDATED":    ["AUDITORIA"]
+    "TOKEN_VALIDATED":    ["AUDITORIA"],
+
+    # --- FAMILY OFFICE / PATRIMONIO ---
+    "FAMILY_ASSET_CREATED":   ["FAMILY_OFFICE", "FINANZAS"],
+    "FAMILY_ASSET_UPDATED":   ["FAMILY_OFFICE", "FINANZAS"],
+    "FAMILY_ASSET_SOLD":      ["FAMILY_OFFICE", "FINANZAS", "AUDITORIA"],
+    "HERITAGE_ASSET_CREATED": ["FAMILY_OFFICE", "FINANZAS"],
+    "HERITAGE_ASSET_REVALUED":["FAMILY_OFFICE", "FINANZAS"],
+    "TRUST_CREATED":          ["FAMILY_OFFICE", "LEGAL", "FINANZAS"],
+    "INHERITANCE_EXECUTED":   ["FAMILY_OFFICE", "LEGAL", "FINANZAS"],
+
+    # --- RIESGO GEOPOLÍTICO ---
+    "COUNTRY_RISK_CHANGED": ["FINANZAS", "LOGISTICA", "RADAR", "FAMILY_OFFICE"],
+    "SANCTION_DETECTED":    ["FINANZAS", "LOGISTICA", "FAMILY_OFFICE"],
+    "WAR_ALERT":            ["FINANZAS", "LOGISTICA", "RADAR"],
+    "TRADE_ROUTE_RISK":     ["FINANZAS", "LOGISTICA"],
+    "GLOBAL_SUPPLY_ALERT":  ["FINANZAS", "LOGISTICA", "RADAR"]
 }
 
 # -----------------------------
@@ -114,11 +131,13 @@ def route_event(event_type, payload, source="SYSTEM"):
 
     # Disparadores ZYRA
     TRIGGERS = {
-        "RADAR":      "EVALUAR_OPORTUNIDAD",
-        "FISCAL":     "CALCULAR_IMPUESTOS",
-        "INVENTARIO": "ACTUALIZAR_STOCK",
-        "AUDITORIA":  "SELLADO_BLOCKCHAIN",
-        "RIESGOS":    "ACTIVAR_PROTOCOLO_SEGURIDAD"
+        "RADAR":          "EVALUAR_OPORTUNIDAD",
+        "FISCAL":         "CALCULAR_IMPUESTOS",
+        "INVENTARIO":     "ACTUALIZAR_STOCK",
+        "AUDITORIA":      "SELLADO_BLOCKCHAIN",
+        "RIESGOS":        "ACTIVAR_PROTOCOLO_SEGURIDAD",
+        "FAMILY_OFFICE":  "ACTUALIZAR_PATRIMONIO",
+        "LOGISTICA":      "RECALCULAR_RUTAS"
     }
 
     fired_actions = [TRIGGERS[m] for m in impacted_modules if m in TRIGGERS]
