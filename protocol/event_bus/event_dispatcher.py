@@ -83,6 +83,27 @@ def trigger_event_hooks(event_record: dict):
             print(f"[EVENT_DISPATCHER] Error en hook: {e}")
 
 # -----------------------------
+# HOOKS RIESGO GEOPOLÍTICO
+# -----------------------------
+def geopolitical_risk_hook(event_record):
+
+    event = event_record.get("event", {})
+    tipo = event.get("tipo")
+
+    geopolitical_events = {
+        "COUNTRY_RISK_CHANGED",
+        "SANCTION_DETECTED",
+        "WAR_ALERT",
+        "TRADE_ROUTE_RISK",
+        "GLOBAL_SUPPLY_ALERT"
+    }
+
+    if tipo in geopolitical_events:
+        print(f"[GEOPOLITICAL_RISK] {tipo}")
+
+register_event_hook(geopolitical_risk_hook)
+
+# -----------------------------
 # Función de prueba rápida
 # -----------------------------
 def test_event_dispatcher():
