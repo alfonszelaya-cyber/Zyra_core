@@ -244,7 +244,9 @@ def riesgo_legal():
 
         else:
             pausa("Opción inválida")
-            # ===============================
+
+
+# ===============================
 # RIESGO LOGÍSTICO
 # ===============================
 def riesgo_logistico():
@@ -469,7 +471,9 @@ def alertas_eventos():
 
         else:
             pausa("Opción inválida")
-            # ===============================
+
+
+# ===============================
 # EVALUACIONES DE RIESGO
 # ===============================
 def evaluaciones_riesgo():
