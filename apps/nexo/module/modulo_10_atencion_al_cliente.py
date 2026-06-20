@@ -1,146 +1,424 @@
-# =====================================================
-# NEXO / ZYRA
-# MÓDULO 10 — ATENCIÓN AL CLIENTE & SOPORTE (LIMPIO)
-# =====================================================
+# ============================================================
+# MODULO 10 — ESCALAMIENTO GLOBAL
+# ============================================================
 
-import os
+def escalar_soporte_global():
 
-# ===============================
-# UI BÁSICA
-# ===============================
-def clear():
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-def pause():
-    input("\nPresiona ENTER para volver...")
-
-def menu(title, options):
     while True:
+
         clear()
-        print(f"\n=== {title} ===")
-        for i, opt in enumerate(options.keys(), 1):
-            print(f"{i}. {opt}")
-        print("0. Volver")
+        header()
 
-        op = input("> ").strip()
+        print("""
 
-        if op == "0":
+ESCALAMIENTO GLOBAL
+
+1. Detectar Caso Transversal
+2. Crear Ticket Global
+3. Transferir Evidencia
+4. Seguimiento de Escalamiento
+5. Historial de Escalamientos
+0. Volver
+
+""")
+
+        op = input("> ")
+
+        if op == "1":
+
+            while True:
+
+                clear()
+                header()
+
+                print("""
+
+DETECTAR CASO TRANSVERSAL
+
+1. NEXO + AXIS
+2. NEXO + SEMILLA
+3. NEXO + AGRO
+4. NEXO + SUBASTAS
+5. Ecosistema Completo
+0. Volver
+
+""")
+
+                sub = input("> ")
+
+                if sub == "0":
+                    break
+
+                pausa("Módulo disponible.")
+
+        elif op == "2":
+
+            while True:
+
+                clear()
+                header()
+
+                print("""
+
+CREAR TICKET GLOBAL
+
+1. Ticket Operativo
+2. Ticket Financiero
+3. Ticket Fiscal
+4. Ticket Tecnológico
+5. Ticket Estratégico
+0. Volver
+
+""")
+
+                sub = input("> ")
+
+                if sub == "0":
+                    break
+
+                pausa("Módulo disponible.")
+
+        elif op == "3":
+
+            while True:
+
+                clear()
+                header()
+
+                print("""
+
+TRANSFERIR EVIDENCIA
+
+1. Documentos
+2. Logs
+3. Auditorías
+4. Evidencias Operativas
+5. Evidencias Financieras
+0. Volver
+
+""")
+
+                sub = input("> ")
+
+                if sub == "0":
+                    break
+
+                pausa("Módulo disponible.")
+
+        elif op == "4":
+
+            while True:
+
+                clear()
+                header()
+
+                print("""
+
+SEGUIMIENTO DE ESCALAMIENTO
+
+1. Casos Abiertos
+2. Casos en Proceso
+3. Casos Prioritarios
+4. Casos Críticos
+5. Estado General
+0. Volver
+
+""")
+
+                sub = input("> ")
+
+                if sub == "0":
+                    break
+
+                pausa("Módulo disponible.")
+
+        elif op == "5":
+
+            while True:
+
+                clear()
+                header()
+
+                print("""
+
+HISTORIAL DE ESCALAMIENTOS
+
+1. Operativos
+2. Financieros
+3. Fiscales
+4. Tecnológicos
+5. Estratégicos
+0. Volver
+
+""")
+
+                sub = input("> ")
+
+                if sub == "0":
+                    break
+
+                pausa("Módulo disponible.")
+
+        elif op == "0":
+
             return
-        if op.isdigit() and 1 <= int(op) <= len(options):
-            list(options.values())[int(op) - 1]()
+
         else:
-            print("Opción inválida")
-            pause()
 
-def hoja(nombre):
-    def inner():
-        clear()
-        print(f"\n[{nombre}]")
-        pause()
-    return inner
+            pausa("Opción inválida")
 
-# ===============================
-# SUBMÓDULOS
-# ===============================
-def entrada_soporte():
-    menu("Entrada de Soporte", {
-        "Identificación del Cliente": hoja("Identificación del Cliente"),
-        "Módulo Afectado": hoja("Módulo Afectado"),
-        "Tipo de Problema": hoja("Tipo de Problema"),
-        "Nivel de Urgencia": hoja("Nivel de Urgencia"),
-        "Historial Automático": hoja("Historial Automático"),
-    })
-
-def atencion_automatica():
-    menu("Atención Automatizada ZYRA", {
-        "Diagnóstico del Problema": hoja("Diagnóstico del Problema"),
-        "Resolución Automática": hoja("Resolución Automática"),
-        "Respuestas Guiadas": hoja("Respuestas Guiadas"),
-        "Validaciones de Estado": hoja("Validaciones de Estado"),
-        "Escalamiento Automático": hoja("Escalamiento Automático"),
-    })
-
-def asesoria_operativa():
-    menu("Asesoría Operativa", {
-        "Qué Acción Tomar": hoja("Qué Acción Tomar"),
-        "Opciones Disponibles": hoja("Opciones Disponibles"),
-        "Impacto de Decisiones": hoja("Impacto de Decisiones"),
-        "Advertencias de Riesgo": hoja("Advertencias de Riesgo"),
-        "Confirmación Asistida": hoja("Confirmación Asistida"),
-    })
-
-def incidencias_financieras():
-    menu("Incidencias Financieras", {
-        "Facturas Faltantes / Erróneas": hoja("Facturas Faltantes / Erróneas"),
-        "Pagos No Reflejados": hoja("Pagos No Reflejados"),
-        "Transferencias en Proceso": hoja("Transferencias en Proceso"),
-        "Impuestos / Retenciones": hoja("Impuestos / Retenciones"),
-        "Correcciones Guiadas": hoja("Correcciones Guiadas"),
-    })
-
-def incidencias_operativas():
-    menu("Incidencias Operativas", {
-        "Procesos Detenidos": hoja("Procesos Detenidos"),
-        "Órdenes Incompletas": hoja("Órdenes Incompletas"),
-        "Estados Inconsistentes": hoja("Estados Inconsistentes"),
-        "Documentación Faltante": hoja("Documentación Faltante"),
-        "Corrección en Vivo": hoja("Corrección en Vivo"),
-    })
+# ============================================================
+# MODULO 10 — ATENCIÓN HUMANA NEXO
+# ============================================================
 
 def atencion_humana():
-    menu("Atención Humana", {
-        "Asignación de Agente": hoja("Asignación de Agente"),
-        "Intervención Especializada": hoja("Intervención Especializada"),
-        "Resolución Manual": hoja("Resolución Manual"),
-        "Validación Final": hoja("Validación Final"),
-    })
 
-def seguimiento_casos():
-    menu("Seguimiento de Casos", {
-        "Casos Abiertos": hoja("Casos Abiertos"),
-        "Casos en Proceso": hoja("Casos en Proceso"),
-        "Casos Críticos": hoja("Casos Críticos"),
-        "Historial Completo": hoja("Historial Completo"),
-        "Reapertura": hoja("Reapertura"),
-    })
+    while True:
 
-def alertas_sla():
-    menu("Alertas & SLA", {
-        "Riesgo Financiero": hoja("Riesgo Financiero"),
-        "Bloqueos Operativos": hoja("Bloqueos Operativos"),
-        "Incidentes Críticos": hoja("Incidentes Críticos"),
-        "Escalamiento Prioritario": hoja("Escalamiento Prioritario"),
-    })
+        clear()
+        header()
 
-def cierre_caso():
-    menu("Cierre del Caso", {
-        "Confirmación del Cliente": hoja("Confirmación del Cliente"),
-        "Evidencia Registrada": hoja("Evidencia Registrada"),
-        "Nivel de Satisfacción": hoja("Nivel de Satisfacción"),
-        "Cierre Definitivo": hoja("Cierre Definitivo"),
-    })
+        print("""
 
-def aprendizaje_zyra():
-    menu("Aprendizaje ZYRA", {
-        "Patrones de Fallos": hoja("Patrones de Fallos"),
-        "Mejora de Respuestas": hoja("Mejora de Respuestas"),
-        "Prevención Futura": hoja("Prevención Futura"),
-        "Optimización Continua": hoja("Optimización Continua"),
-    })
+ATENCIÓN HUMANA NEXO
 
-# ===============================
-# ENTRADA OFICIAL PARA CORE
-# ===============================
+1. Asignación de Agente NEXO
+2. Intervención Especializada NEXO
+3. Resolución Manual NEXO
+4. Validación Final NEXO
+5. Escalar a Soporte Global
+0. Volver
+
+""")
+
+        op = input("> ")
+
+        if op == "1":
+
+            while True:
+
+                clear()
+                header()
+
+                print("""
+
+ASIGNACIÓN DE AGENTE NEXO
+
+1. Agente Operativo
+2. Agente Financiero
+3. Agente Fiscal
+4. Agente Técnico
+5. Historial
+0. Volver
+
+""")
+
+                sub = input("> ")
+
+                if sub == "0":
+                    break
+
+                pausa("Módulo disponible.")
+
+        elif op == "2":
+
+            while True:
+
+                clear()
+                header()
+
+                print("""
+
+INTERVENCIÓN ESPECIALIZADA NEXO
+
+1. Operaciones
+2. Finanzas
+3. Fiscal
+4. Tecnología
+5. Historial
+0. Volver
+
+""")
+
+                sub = input("> ")
+
+                if sub == "0":
+                    break
+
+                pausa("Módulo disponible.")
+
+        elif op == "3":
+
+            while True:
+
+                clear()
+                header()
+
+                print("""
+
+RESOLUCIÓN MANUAL NEXO
+
+1. Corrección Operativa
+2. Corrección Financiera
+3. Corrección Fiscal
+4. Corrección Técnica
+5. Evidencias
+0. Volver
+
+""")
+
+                sub = input("> ")
+
+                if sub == "0":
+                    break
+
+                pausa("Módulo disponible.")
+
+        elif op == "4":
+
+            while True:
+
+                clear()
+                header()
+
+                print("""
+
+VALIDACIÓN FINAL NEXO
+
+1. Validar Resolución
+2. Validar Evidencias
+3. Confirmar Cliente
+4. Cerrar Caso
+5. Historial
+0. Volver
+
+""")
+
+                sub = input("> ")
+
+                if sub == "0":
+                    break
+
+                pausa("Módulo disponible.")
+
+        elif op == "5":
+
+            escalar_soporte_global()
+
+        elif op == "0":
+
+            return
+
+        else:
+
+            pausa("Opción inválida")
+
+# ============================================================
+# MODULO 10 — MENÚ PRINCIPAL
+# ============================================================
+
 def modulo_10_atencion_al_cliente():
-    menu("ATENCIÓN AL CLIENTE & SOPORTE", {
-        "Entrada de Soporte": entrada_soporte,
-        "Atención Automatizada ZYRA": atencion_automatica,
-        "Asesoría Operativa": asesoria_operativa,
-        "Incidencias Financieras": incidencias_financieras,
-        "Incidencias Operativas": incidencias_operativas,
-        "Atención Humana": atencion_humana,
-        "Seguimiento de Casos": seguimiento_casos,
-        "Alertas & SLA": alertas_sla,
-        "Cierre del Caso": cierre_caso,
-        "Aprendizaje ZYRA": aprendizaje_zyra,
-    })
+
+    while True:
+
+        clear()
+        header()
+
+        print("""
+
+ZYRA / NEXO CORE — ATENCIÓN AL CLIENTE & SOPORTE
+
+1. Entrada de Soporte
+2. Atención Automatizada ZYRA
+3. Asesoría Operativa
+4. Incidencias Financieras
+5. Incidencias Operativas
+6. Atención Humana NEXO
+7. Seguimiento de Casos
+8. Alertas & SLA
+9. Escalamiento Global
+10. Cierre del Caso
+11. Aprendizaje ZYRA
+0. Volver a ROOT
+
+""")
+
+        op = input("> ")
+
+        if op == "1":
+
+            entrada_soporte()
+
+        elif op == "2":
+
+            atencion_automatica()
+
+        elif op == "3":
+
+            asesoria_operativa()
+
+        elif op == "4":
+
+            incidencias_financieras()
+
+        elif op == "5":
+
+            incidencias_operativas()
+
+        elif op == "6":
+
+            atencion_humana()
+
+        elif op == "7":
+
+            seguimiento_casos()
+
+        elif op == "8":
+
+            alertas_sla()
+
+        elif op == "9":
+
+            escalar_soporte_global()
+
+        elif op == "10":
+
+            cierre_caso()
+
+        elif op == "11":
+
+            aprendizaje_zyra()
+
+        elif op == "0":
+
+            break
+
+        else:
+
+            pausa("Opción inválida")
+
+# ============================================================
+# FIN MÓDULO 10
+# ============================================================
+
+# FUNCIONES DEL MÓDULO:
+#
+# entrada_soporte()
+# atencion_automatica()
+# asesoria_operativa()
+# incidencias_financieras()
+# incidencias_operativas()
+# atencion_humana()
+# seguimiento_casos()
+# alertas_sla()
+# escalar_soporte_global()
+# cierre_caso()
+# aprendizaje_zyra()
+# modulo_10_atencion_al_cliente()
+#
+# LLAMADA DESDE ROOT:
+#
+# elif op == "10":
+#     modulo_10_atencion_al_cliente()
+#
+# ============================================================
