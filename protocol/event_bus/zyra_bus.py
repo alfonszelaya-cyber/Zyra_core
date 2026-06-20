@@ -29,6 +29,17 @@ def subscribe(event_name, handler):
     _subscribers[event_name].append(handler)
 
 # ============================
+# EVENTOS GEOPOLÍTICOS
+# ============================
+GEOPOLITICAL_EVENTS = {
+    "COUNTRY_RISK_CHANGED",
+    "SANCTION_DETECTED",
+    "WAR_ALERT",
+    "TRADE_ROUTE_RISK",
+    "GLOBAL_SUPPLY_ALERT"
+}
+
+# ============================
 # EMITIR EVENTO (CANÓNICO)
 # ============================
 def emit(event, source="SYSTEM", payload=None):
@@ -75,11 +86,18 @@ def emit(event, source="SYSTEM", payload=None):
     # DISPATCH A SUBSCRIPTORES
     # -------------------------
     event_name = registro.get("event")
+
     if event_name in _subscribers:
         for handler in _subscribers[event_name]:
             try:
                 handler(registro)
             except Exception as e:
                 print(f"[ZYRA BUS ERROR] {e}")
+
+    # -------------------------
+    # GEOPOLITICAL TRACE
+    # -------------------------
+    if event_name in GEOPOLITICAL_EVENTS:
+        print(f"[GEOPOLITICAL EVENT] {event_name}")
 
     return registro
