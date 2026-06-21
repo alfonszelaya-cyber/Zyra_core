@@ -2,52 +2,82 @@
 # recommendation_engine.py
 # NEXO / ZYRA
 # Radar VIP Recommendation Engine
+# Production Ready
 # ============================================================
 
 from datetime import datetime
 from uuid import uuid4
-from typing import Dict
+from typing import Dict, List
 
 
 class RecommendationEngine:
+
+    def __init__(self):
+
+        self._history: List[dict] = []
 
     def _now(self):
 
         return datetime.utcnow().isoformat()
 
-    def generate_recommendation(
+    def generate(
         self,
-        profitability: float,
-        risk_score: float,
+        profitability_result: Dict,
+        risk_result: Dict,
+        opportunity_result: Dict,
     ) -> Dict:
 
-        recommendation = "HOLD"
+        margin = float(
+            profitability_result.get(
+                "margin",
+                0,
+            )
+        )
+
+        risk_level = (
+            risk_result.get(
+                "risk_level",
+                "HIGH",
+            )
+        )
+
+        priority = (
+            opportunity_result.get(
+                "priority",
+                "LOW",
+            )
+        )
+
+        recommendation = "REJECT"
 
         if (
-            profitability >= 20
-            and risk_score <= 30
+            margin >= 20
+            and risk_level == "LOW"
         ):
             recommendation = "BUY"
 
         elif (
-            profitability < 10
-            or risk_score >= 70
+            margin >= 10
+            and risk_level != "HIGH"
         ):
-            recommendation = "REJECT"
+            recommendation = "REVIEW"
 
-        return {
+        result = {
 
             "recommendation_id":
                 f"REC-{uuid4()}",
 
-            "profitability":
-                profitability,
-
-            "risk_score":
-                risk_score,
-
             "recommendation":
                 recommendation,
+
+            "margin":
+                margin,
+
+            "risk_level":
+                risk_level,
+
+            "priority":
+                priority,
 
             "generated_at":
                 self._now(),
@@ -55,6 +85,12 @@ class RecommendationEngine:
             "status":
                 "READY",
         }
+
+        self._history.append(
+            result
+        )
+
+        return result
 
 
 recommendation_engine = (
