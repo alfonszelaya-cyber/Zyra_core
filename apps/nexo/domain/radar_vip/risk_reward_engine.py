@@ -2,6 +2,7 @@
 # risk_reward_engine.py
 # NEXO / ZYRA
 # Radar VIP Risk Reward Engine
+# Production Ready
 # ============================================================
 
 from datetime import datetime
@@ -13,7 +14,7 @@ class RiskRewardEngine:
 
     def __init__(self):
 
-        self._evaluations: List[dict] = []
+        self._history: List[dict] = []
 
     def _now(self):
 
@@ -21,64 +22,64 @@ class RiskRewardEngine:
 
     def evaluate(
         self,
-        estimated_profit: float,
-        capital_required: float,
+        investment_analysis: Dict,
+        market_context: Dict,
     ) -> Dict:
 
-        ratio = 0.0
-
-        if capital_required > 0:
-
-            ratio = round(
-
-                estimated_profit
-                / capital_required,
-
-                4,
+        roi = float(
+            investment_analysis.get(
+                "roi",
+                0,
             )
+        )
+
+        market_score = float(
+            market_context.get(
+                "market_score",
+                0,
+            )
+        )
 
         risk_level = "HIGH"
 
-        if ratio >= 0.50:
+        if (
+            roi >= 30
+            and market_score >= 70
+        ):
             risk_level = "LOW"
 
-        elif ratio >= 0.25:
+        elif (
+            roi >= 15
+            and market_score >= 50
+        ):
             risk_level = "MEDIUM"
 
         result = {
 
-            "evaluation_id":
-                f"RR-{uuid4()}",
+            "risk_id":
+                f"RISK-{uuid4()}",
 
-            "estimated_profit":
-                estimated_profit,
+            "roi":
+                roi,
 
-            "capital_required":
-                capital_required,
-
-            "risk_reward_ratio":
-                ratio,
+            "market_score":
+                market_score,
 
             "risk_level":
                 risk_level,
 
             "generated_at":
                 self._now(),
+
+            "status":
+                "EVALUATED",
         }
 
-        self._evaluations.append(
+        self._history.append(
             result
         )
 
         return result
-
-    def get_history(
-        self,
-    ):
-
-        return list(
-            self._evaluations
-        )
 
 
 risk_reward_engine = (
