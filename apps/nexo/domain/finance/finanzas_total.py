@@ -1,176 +1,241 @@
 # ============================================================
 # finanzas_total.py
-# NEXO / ZYRA — MOTOR FINANCIERO GLOBAL
-# Domain Layer | Agregador Maestro | 10+ Years Architecture
+# NEXO / ZYRA
+# FINANCIAL MASTER AGGREGATOR
+# PRODUCCIÓN
 # ============================================================
 
-import json
-import os
-import uuid
 from datetime import datetime
-from typing import Dict, List
+from uuid import uuid4
+from decimal import Decimal
+from typing import Dict
+
+from apps.nexo.domain.accounting.accounting_engine import AccountingEngine
+from apps.nexo.domain.finance.declaration_engine import DeclarationEngine
+from apps.nexo.domain.finance.document_fiscal_engine import FiscalDocumentEngine
 
 
-# ============================================================
-# CONFIGURACIÓN BASE (Domain Safe — sin rutas hardcodeadas externas)
-# ============================================================
+class FinanzasTotal:
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-REPORTS_DIR = os.path.join(BASE_DIR, "reportes_financieros")
-
-os.makedirs(REPORTS_DIR, exist_ok=True)
-
-
-# ============================================================
-# TASAS DE CAMBIO (Preparado para futura integración API)
-# ============================================================
-
-def obtener_tasas_cambio() -> Dict[str, float]:
     """
-    Simulación de tasas.
-    En producción: conectar con servicio externo (infra layer).
+    Agregador financiero supremo.
+
+    Responsabilidades:
+
+    - Consolidar contabilidad
+    - Consolidar declaraciones
+    - Consolidar documentos fiscales
+    - Consolidar métricas financieras
+    - Alimentar Dashboard Ejecutivo
+    - Alimentar KPIs
+    - Alimentar ZYRA
     """
-    return {
-        "CNY": 7.24,
-        "BTC": 0.000018,
-        "GTQ": 7.82,
-        "MXN": 17.10,
-    }
 
+    def __init__(self):
 
-# ============================================================
-# LECTURA SEGURA DE JSON
-# ============================================================
-
-def _leer_archivo_json(ruta: str) -> List[dict]:
-    if not os.path.exists(ruta):
-        return []
-
-    try:
-        with open(ruta, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            return data if isinstance(data, list) else []
-    except Exception:
-        return []
-
-
-# ============================================================
-# MOTOR PRINCIPAL
-# ============================================================
-
-def generar_reporte_maestro() -> dict:
-    print("\n🚀 [ZYRA FINANCE CORE] Procesando balance global...")
-
-    tasas = obtener_tasas_cambio()
-
-    metricas = {
-        "ingresos": 0.0,
-        "inversion": 0.0,
-        "impuestos": 0.0,
-    }
-
-    mapeo = {
-        "ingresos": [
-            "e_invoices.json",
-            "universal_payments.json",
-            "ledger.json",
-        ],
-        "inversion": [
-            "inventory.json",
-            "ledger_finanzas.json",
-            "fiscal_documents.json",
-        ],
-        "impuestos": [
-            "tax_declarations.json",
-            "documentos_fiscales.json",
-        ],
-    }
-
-    # ========================================================
-    # AGREGACIÓN FINANCIERA
-    # ========================================================
-
-    for categoria, archivos in mapeo.items():
-        for archivo in archivos:
-            ruta = os.path.join(DATA_DIR, archivo)
-            registros = _leer_archivo_json(ruta)
-
-            for reg in registros:
-                monto = (
-                    reg.get("monto")
-                    or reg.get("monto_usd")
-                    or reg.get("monto_base")
-                    or 0.0
-                )
-                try:
-                    metricas[categoria] += float(monto)
-                except (ValueError, TypeError):
-                    continue
-
-    ingresos = metricas["ingresos"]
-    inversion = metricas["inversion"]
-    impuestos = metricas["impuestos"]
-
-    ganancia_neta = ingresos - inversion - impuestos
-
-    # ========================================================
-    # TIEMPOS
-    # ========================================================
-
-    ahora = datetime.utcnow()
-    fecha = ahora.strftime("%Y-%m-%d")
-    mes = ahora.strftime("%Y-%m")
-    anio = ahora.strftime("%Y")
-
-    # ========================================================
-    # REPORTE FINAL
-    # ========================================================
-
-    reporte_final = {
-        "id_reporte": str(uuid.uuid4()),
-        "timestamp_utc": ahora.isoformat(),
-        "fecha": fecha,
-        "mes": mes,
-        "anio": anio,
-        "metricas": {
-            "ingresos": round(ingresos, 2),
-            "inversion": round(inversion, 2),
-            "impuestos": round(impuestos, 2),
-            "ganancia_neta": round(ganancia_neta, 2),
-        },
-        "conversiones": {
-            moneda: round(ganancia_neta * tasa, 8)
-            for moneda, tasa in tasas.items()
-        },
-    }
-
-    # ========================================================
-    # PERSISTENCIA HISTÓRICA
-    # ========================================================
-
-    for tipo, nombre in [
-        ("diario", fecha),
-        ("mensual", mes),
-        ("anual", anio),
-    ]:
-        archivo_reporte = os.path.join(
-            REPORTS_DIR, f"reporte_{tipo}_{nombre}.json"
+        self.accounting_engine = (
+            AccountingEngine()
         )
 
-        historial = _leer_archivo_json(archivo_reporte)
-        historial.append(reporte_final)
+        self.declaration_engine = (
+            DeclarationEngine()
+        )
 
-        with open(archivo_reporte, "w", encoding="utf-8") as f:
-            json.dump(historial, f, indent=2)
+        self.document_engine = (
+            FiscalDocumentEngine()
+        )
 
-    print("📂 Reportes financieros actualizados correctamente.")
-    return reporte_final
+    # ========================================================
+    # UTILIDADES
+    # ========================================================
+
+    def _now(self):
+
+        return datetime.utcnow().isoformat()
+
+    def _report_id(self):
+
+        return f"FIN-{uuid4()}"
+
+    # ========================================================
+    # REPORTE MAESTRO
+    # ========================================================
+
+    def generar_reporte_maestro(
+        self,
+    ) -> Dict:
+
+        entries = (
+            self.accounting_engine
+            .get_entries()
+        )
+
+        ingresos = Decimal("0")
+        egresos = Decimal("0")
+
+        for entry in entries:
+
+            amount = Decimal(
+                str(
+                    entry.get(
+                        "amount",
+                        0
+                    )
+                )
+            )
+
+            if (
+                entry.get(
+                    "entry_type"
+                )
+                == "CREDIT"
+            ):
+                ingresos += amount
+
+            else:
+                egresos += amount
+
+        declaraciones = (
+            self.declaration_engine
+            .get_all_declarations()
+        )
+
+        documentos = (
+            self.document_engine
+            .get_all_documents()
+        )
+
+        impuestos = Decimal("0")
+
+        ganancia_neta = (
+            ingresos
+            - egresos
+            - impuestos
+        )
+
+        return {
+
+            "report_id":
+                self._report_id(),
+
+            "generated_at":
+                self._now(),
+
+            "report_type":
+                "FINANZAS_TOTAL",
+
+            "metricas": {
+
+                "ingresos":
+                    float(
+                        ingresos
+                    ),
+
+                "egresos":
+                    float(
+                        egresos
+                    ),
+
+                "impuestos":
+                    float(
+                        impuestos
+                    ),
+
+                "ganancia_neta":
+                    float(
+                        ganancia_neta
+                    ),
+            },
+
+            "declaraciones":
+                len(
+                    declaraciones
+                ),
+
+            "documentos_fiscales":
+                len(
+                    documentos
+                ),
+
+            "asientos_contables":
+                len(
+                    entries
+                ),
+
+            "status":
+                "GENERATED",
+        }
+
+    # ========================================================
+    # DASHBOARD
+    # ========================================================
+
+    def dashboard_snapshot(
+        self,
+    ) -> Dict:
+
+        return (
+            self.generar_reporte_maestro()
+        )
+
+    # ========================================================
+    # RESUMEN
+    # ========================================================
+
+    def get_summary(
+        self,
+    ) -> Dict:
+
+        report = (
+            self.generar_reporte_maestro()
+        )
+
+        return {
+
+            "report_id":
+                report["report_id"],
+
+            "ganancia_neta":
+                report["metricas"][
+                    "ganancia_neta"
+                ],
+
+            "declaraciones":
+                report[
+                    "declaraciones"
+                ],
+
+            "documentos":
+                report[
+                    "documentos_fiscales"
+                ],
+
+            "generated_at":
+                report[
+                    "generated_at"
+                ],
+        }
 
 
 # ============================================================
-# EJECUCIÓN LOCAL CONTROLADA
+# INSTANCIA GLOBAL
 # ============================================================
 
-if __name__ == "__main__":
-    generar_reporte_maestro()
+finanzas_total = (
+    FinanzasTotal()
+)
+
+# ============================================================
+# COMPATIBILIDAD LEGACY
+# ============================================================
+
+def generar_reporte_maestro():
+
+    return (
+        finanzas_total
+        .generar_reporte_maestro()
+    )
+
+# ============================================================
+# FIN
+# ============================================================
