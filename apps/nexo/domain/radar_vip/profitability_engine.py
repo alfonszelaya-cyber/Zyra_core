@@ -2,6 +2,7 @@
 # profitability_engine.py
 # NEXO / ZYRA
 # Radar VIP Profitability Engine
+# Production Ready
 # ============================================================
 
 from datetime import datetime
@@ -13,7 +14,7 @@ class ProfitabilityEngine:
 
     def __init__(self):
 
-        self._calculations: List[dict] = []
+        self._history: List[dict] = []
 
     def _now(self):
 
@@ -21,20 +22,55 @@ class ProfitabilityEngine:
 
     def calculate(
         self,
-        acquisition_cost: float,
-        logistics_cost: float,
-        taxes_cost: float,
-        sale_price: float,
+        investment_analysis: Dict,
+        logistics_data: Dict,
+        finance_data: Dict,
+        operations_data: Dict,
     ) -> Dict:
 
-        total_cost = (
+        acquisition_cost = float(
+            investment_analysis.get(
+                "acquisition_cost",
+                0,
+            )
+        )
 
+        logistics_cost = float(
+            logistics_data.get(
+                "total_logistics_cost",
+                0,
+            )
+        )
+
+        taxes_cost = float(
+            finance_data.get(
+                "taxes_cost",
+                0,
+            )
+        )
+
+        operational_cost = float(
+            operations_data.get(
+                "operational_cost",
+                0,
+            )
+        )
+
+        sale_price = float(
+            investment_analysis.get(
+                "projected_sale",
+                0,
+            )
+        )
+
+        total_cost = (
             acquisition_cost
             + logistics_cost
             + taxes_cost
+            + operational_cost
         )
 
-        profit = (
+        net_profit = (
             sale_price
             - total_cost
         )
@@ -44,55 +80,42 @@ class ProfitabilityEngine:
         if sale_price > 0:
 
             margin = round(
-
                 (
-                    profit
+                    net_profit
                     / sale_price
                 ) * 100,
-
                 2,
             )
 
         result = {
 
-            "calculation_id":
+            "profitability_id":
                 f"PROF-{uuid4()}",
 
             "total_cost":
-                round(
-                    total_cost,
-                    2,
-                ),
+                round(total_cost, 2),
 
             "sale_price":
                 sale_price,
 
-            "profit":
-                round(
-                    profit,
-                    2,
-                ),
+            "net_profit":
+                round(net_profit, 2),
 
             "margin":
                 margin,
 
             "generated_at":
                 self._now(),
+
+            "status":
+                "CALCULATED",
         }
 
-        self._calculations.append(
+        self._history.append(
             result
         )
 
         return result
-
-    def get_history(
-        self,
-    ):
-
-        return list(
-            self._calculations
-        )
 
 
 profitability_engine = (
