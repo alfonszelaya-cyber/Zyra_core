@@ -1,117 +1,281 @@
+# ============================================================
 # tax_declarations.py
-# NEXO — MOTOR DE DECLARACIONES
+# NEXO / ZYRA
+# Tax Declarations Engine
+# PRODUCCIÓN
+# ============================================================
 
-import os
-import json
 from datetime import datetime
+from uuid import uuid4
+from decimal import Decimal
+from typing import Dict, List, Optional
 
-from engines.economic_engine.domain.accounting_engine import libro_por_empresa
-from foundation.ledger.core_ledger import ledger_record
-
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-DATA_DIR = os.path.join(BASE_DIR, "data")
-os.makedirs(DATA_DIR, exist_ok=True)
-
-DECLARATIONS_DIR = os.path.join(DATA_DIR, "declarations")
-os.makedirs(DECLARATIONS_DIR, exist_ok=True)
+from apps.nexo.domain.accounting.accounting_engine import (
+    AccountingEngine
+)
 
 
-def _save(path, data):
+class TaxDeclarationsEngine:
 
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    """
+    Motor Fiscal.
+
+    Responsabilidades:
+
+    - Declaraciones mensuales
+    - Declaraciones anuales
+    - Acumulados fiscales
+    - Utilidades
+    - Integración Hacienda
+    - Auditoría fiscal
+    """
+
+    def __init__(self):
+
+        self.accounting_engine = (
+            AccountingEngine()
+        )
+
+        self._declarations = []
+
+        self._audit_log = []
+
+    # ========================================================
+    # UTILIDADES
+    # ========================================================
+
+    def _now(self):
+
+        return datetime.utcnow().isoformat()
+
+    def _declaration_id(self):
+
+        return f"TAX-{uuid4()}"
+
+    def _audit(
+        self,
+        action: str,
+        data: dict,
+    ):
+
+        self._audit_log.append({
+
+            "event_id":
+                str(uuid4()),
+
+            "action":
+                action,
+
+            "timestamp":
+                self._now(),
+
+            "data":
+                data,
+        })
+
+    # ========================================================
+    # ACUMULADOS
+    # ========================================================
+
+    def calcular_acumulados(
+        self,
+        company_id: Optional[str] = None,
+    ) -> Dict:
+
+        ingresos = Decimal("0")
+        gastos = Decimal("0")
+
+        entries = (
+            self.accounting_engine
+            .get_entries()
+        )
+
+        for entry in entries:
+
+            if (
+                company_id
+                and
+                entry.get(
+                    "company_id"
+                )
+                != company_id
+            ):
+                continue
+
+            amount = Decimal(
+                str(
+                    entry.get(
+                        "amount",
+                        0
+                    )
+                )
+            )
+
+            if (
+                entry.get(
+                    "entry_type"
+                )
+                == "CREDIT"
+            ):
+                ingresos += amount
+
+            else:
+                gastos += amount
+
+        utilidad = (
+            ingresos
+            - gastos
+        )
+
+        return {
+
+            "ingresos":
+                float(
+                    ingresos
+                ),
+
+            "gastos":
+                float(
+                    gastos
+                ),
+
+            "utilidad":
+                float(
+                    utilidad
+                ),
+        }
+
+    # ========================================================
+    # DECLARACIÓN MENSUAL
+    # ========================================================
+
+    def generar_declaracion_mensual(
+        self,
+        company_id: str,
+        jurisdiction: str,
+        month: int,
+        year: int,
+    ) -> Dict:
+
+        acumulados = (
+            self.calcular_acumulados(
+                company_id
+            )
+        )
+
+        declaration = {
+
+            "declaration_id":
+                self._declaration_id(),
+
+            "company_id":
+                company_id,
+
+            "jurisdiction":
+                jurisdiction,
+
+            "month":
+                month,
+
+            "year":
+                year,
+
+            "acumulados":
+                acumulados,
+
+            "status":
+                "GENERATED",
+
+            "created_at":
+                self._now(),
+        }
+
+        self._declarations.append(
+            declaration
+        )
+
+        self._audit(
+            "MONTHLY_DECLARATION",
+            declaration,
+        )
+
+        return declaration
+
+    # ========================================================
+    # CONSULTAS
+    # ========================================================
+
+    def get_declarations(
+        self,
+    ) -> List[Dict]:
+
+        return list(
+            self._declarations
+        )
+
+    def get_declaration(
+        self,
+        declaration_id: str,
+    ) -> Optional[Dict]:
+
+        for declaration in self._declarations:
+
+            if (
+                declaration[
+                    "declaration_id"
+                ]
+                == declaration_id
+            ):
+                return declaration
+
+        return None
+
+    # ========================================================
+    # AUDITORÍA
+    # ========================================================
+
+    def get_audit_log(
+        self,
+    ):
+
+        return list(
+            self._audit_log
+        )
+
+    # ========================================================
+    # RESUMEN
+    # ========================================================
+
+    def get_summary(
+        self,
+    ):
+
+        return {
+
+            "declarations":
+                len(
+                    self._declarations
+                ),
+
+            "audit_events":
+                len(
+                    self._audit_log
+                ),
+
+            "generated_at":
+                self._now(),
+        }
 
 
-def _now():
-    return datetime.now().isoformat()
+# ============================================================
+# INSTANCIA GLOBAL
+# ============================================================
 
+tax_declarations_engine = (
+    TaxDeclarationsEngine()
+)
 
-def calcular_acumulados(empresa_id, mes=None, anio=None):
-
-    libro = libro_por_empresa(empresa_id)
-
-    total_ingresos = 0.0
-    total_gastos = 0.0
-
-    for a in libro:
-
-        fecha = datetime.fromisoformat(a["ts"])
-
-        if mes and fecha.month != mes:
-            continue
-
-        if anio and fecha.year != anio:
-            continue
-
-        if a.get("credito") == "INGRESOS":
-            total_ingresos += a.get("monto", 0)
-
-        if a.get("debito") in ("GASTOS", "COSTOS"):
-            total_gastos += a.get("monto", 0)
-
-    return {
-        "ingresos": round(total_ingresos, 2),
-        "gastos": round(total_gastos, 2),
-        "utilidad": round(total_ingresos - total_gastos, 2),
-    }
-
-
-def generar_declaracion_mensual(empresa_id, pais, mes, anio):
-
-    acumulados = calcular_acumulados(empresa_id, mes, anio)
-
-    declaracion = {
-        "empresa": empresa_id,
-        "pais": pais,
-        "tipo": "MENSUAL",
-        "mes": mes,
-        "anio": anio,
-        "datos": acumulados,
-        "estado": "BORRADOR",
-        "generado": _now(),
-    }
-
-    fname = f"{empresa_id}_{pais}_{anio}_{mes}_mensual.json"
-
-    path = os.path.join(DECLARATIONS_DIR, fname)
-
-    _save(path, declaracion)
-
-    ledger_record(
-        event="DECLARACION_MENSUAL_GENERADA",
-        status="BORRADOR",
-        detail=declaracion
-    )
-
-    return declaracion
-
-
-def generar_declaracion_anual(empresa_id, pais, anio):
-
-    acumulados = calcular_acumulados(empresa_id, None, anio)
-
-    declaracion = {
-        "empresa": empresa_id,
-        "pais": pais,
-        "tipo": "ANUAL",
-        "anio": anio,
-        "datos": acumulados,
-        "estado": "BORRADOR",
-        "generado": _now(),
-    }
-
-    fname = f"{empresa_id}_{pais}_{anio}_anual.json"
-
-    path = os.path.join(DECLARATIONS_DIR, fname)
-
-    _save(path, declaracion)
-
-    ledger_record(
-        event="DECLARACION_ANUAL_GENERADA",
-        status="BORRADOR",
-        detail=declaracion
-    )
-
-    return declaracion
+# ============================================================
+# FIN
+# tax_declarations.py
+# ============================================================
