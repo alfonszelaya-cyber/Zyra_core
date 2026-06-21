@@ -1,77 +1,226 @@
 # ============================================================
 # declaration_engine.py
-# Motor de declaraciones del CORE ZYRA/NEXO
+# NEXO / ZYRA
+# Fiscal Declaration Engine
+# PRODUCCIÓN
 # ============================================================
 
-import os
-import json
-import datetime
+from datetime import datetime
+from uuid import uuid4
+from typing import Dict, List, Optional
 
-# -----------------------------
-# Configuración de declaraciones
-# -----------------------------
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-DECLARATION_FILE = os.path.join(DATA_DIR, "declarations.json")
-os.makedirs(DATA_DIR, exist_ok=True)
 
-# Inicializar archivo si no existe
-if not os.path.exists(DECLARATION_FILE):
-    with open(DECLARATION_FILE, "w", encoding="utf-8") as f:
-        json.dump([], f, indent=2)
+class DeclarationEngine:
 
-# -----------------------------
-# Funciones de declaraciones
-# -----------------------------
-def add_declaration(declaration: dict):
     """
-    Agrega una declaración fiscal al sistema
-    """
-    ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    record = {"declaration": declaration, "ts": ts}
+    Motor de declaraciones fiscales.
 
-    try:
-        with open(DECLARATION_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            if not isinstance(data, list):
-                data = []
-    except Exception:
-        data = []
+    Responsabilidades:
 
-    data.append(record)
+    - Registrar declaraciones
+    - Consultar declaraciones
+    - Generar resúmenes
+    - Auditoría básica
+    - Integración futura con Hacienda
+    """
 
-    try:
-        with open(DECLARATION_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
-    except Exception:
-        pass
+    def __init__(self):
 
-def get_all_declarations():
-    """
-    Retorna todas las declaraciones
-    """
-    try:
-        with open(DECLARATION_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            if not isinstance(data, list):
-                return []
-            return data
-    except Exception:
-        return []
+        self._declarations: List[dict] = []
 
-def get_declarations_by_type(declaration_type: str):
-    """
-    Retorna todas las declaraciones de un tipo específico
-    """
-    all_declarations = get_all_declarations()
-    return [d for d in all_declarations if d.get("declaration", {}).get("type") == declaration_type]
+        self._audit_log: List[dict] = []
 
-def get_summary():
-    """
-    Retorna un resumen de declaraciones
-    """
-    all_declarations = get_all_declarations()
-    summary = {
-        "total_declarations": len(all_declarations),
-    }
-    return summary
+    # ========================================================
+    # UTILIDADES
+    # ========================================================
+
+    def _now(self):
+
+        return datetime.utcnow().isoformat()
+
+    def _declaration_id(self):
+
+        return f"DEC-{uuid4()}"
+
+    def _audit(
+        self,
+        action: str,
+        data: Dict,
+    ):
+
+        self._audit_log.append({
+
+            "event_id":
+                str(uuid4()),
+
+            "action":
+                action,
+
+            "timestamp":
+                self._now(),
+
+            "data":
+                data,
+        })
+
+    # ========================================================
+    # REGISTRO
+    # ========================================================
+
+    def add_declaration(
+        self,
+        declaration: Dict,
+    ) -> Dict:
+
+        record = {
+
+            "declaration_id":
+                self._declaration_id(),
+
+            "declaration":
+                declaration,
+
+            "status":
+                "REGISTERED",
+
+            "created_at":
+                self._now(),
+        }
+
+        self._declarations.append(
+            record
+        )
+
+        self._audit(
+            "DECLARATION_CREATED",
+            record,
+        )
+
+        return record
+
+    # ========================================================
+    # CONSULTAS
+    # ========================================================
+
+    def get_all_declarations(
+        self,
+    ) -> List[Dict]:
+
+        return list(
+            self._declarations
+        )
+
+    def get_declaration(
+        self,
+        declaration_id: str,
+    ) -> Optional[Dict]:
+
+        for declaration in self._declarations:
+
+            if (
+                declaration["declaration_id"]
+                == declaration_id
+            ):
+                return declaration
+
+        return None
+
+    def get_declarations_by_type(
+        self,
+        declaration_type: str,
+    ) -> List[Dict]:
+
+        return [
+
+            declaration
+
+            for declaration
+            in self._declarations
+
+            if (
+                declaration
+                .get(
+                    "declaration",
+                    {}
+                )
+                .get(
+                    "type"
+                )
+                == declaration_type
+            )
+        ]
+
+    # ========================================================
+    # AUDITORÍA
+    # ========================================================
+
+    def get_audit_log(
+        self,
+    ) -> List[Dict]:
+
+        return list(
+            self._audit_log
+        )
+
+    # ========================================================
+    # RESUMEN
+    # ========================================================
+
+    def get_summary(
+        self,
+    ) -> Dict:
+
+        return {
+
+            "total_declarations":
+                len(
+                    self._declarations
+                ),
+
+            "audit_events":
+                len(
+                    self._audit_log
+                ),
+
+            "generated_at":
+                self._now(),
+        }
+
+    # ========================================================
+    # REPORTE
+    # ========================================================
+
+    def generate_report(
+        self,
+    ) -> Dict:
+
+        return {
+
+            "report_type":
+                "FISCAL_DECLARATIONS",
+
+            "records":
+                len(
+                    self._declarations
+                ),
+
+            "summary":
+                self.get_summary(),
+
+            "generated_at":
+                self._now(),
+        }
+
+
+# ============================================================
+# INSTANCIA GLOBAL
+# ============================================================
+
+declaration_engine = (
+    DeclarationEngine()
+)
+
+# ============================================================
+# FIN
+# declaration_engine.py
+# ============================================================
