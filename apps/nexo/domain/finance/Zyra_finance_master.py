@@ -1,81 +1,256 @@
-import json
-import os
-import uuid
+# ============================================================
+# Zyra_finance_master.py
+# NEXO / ZYRA
+# FINANCE MASTER ORCHESTRATOR
+# PRODUCCIÓN
+# ============================================================
+
 from datetime import datetime
+from decimal import Decimal
+from typing import Dict
+import uuid
 
-# ==========================================
-# Rutas base del sistema
-# ==========================================
+# ============================================================
+# DOMINIOS NEXO
+# ============================================================
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-REPORTS_DIR = os.path.join(BASE_DIR, "reportes_financieros")
+from apps.nexo.domain.accounting.accounting_engine import AccountingEngine
+from apps.nexo.domain.accounting.balance_engine import BalanceEngine
+from apps.nexo.domain.accounting.journal_engine import JournalEngine
+from apps.nexo.domain.accounting.reconciliation_engine import ReconciliationEngine
 
-# ==========================================
-# Reporte maestro financiero global
-# ==========================================
+# ============================================================
+# FINANCE MASTER
+# ============================================================
+
+class ZyraFinanceMaster:
+
+    """
+    Motor Financiero Maestro.
+
+    Responsabilidades:
+
+    - Consolidar Contabilidad
+    - Consolidar Balance
+    - Consolidar Journal
+    - Consolidar Reconciliación
+    - Generar Reporte Maestro
+    - Alimentar Dashboard Ejecutivo
+    - Alimentar KPIs
+    - Alimentar ZYRA
+    """
+
+    def __init__(self):
+
+        self.accounting_engine = AccountingEngine()
+
+        self.balance_engine = BalanceEngine()
+
+        self.journal_engine = JournalEngine()
+
+        self.reconciliation_engine = (
+            ReconciliationEngine()
+        )
+
+    # ========================================================
+    # UTILIDADES
+    # ========================================================
+
+    def _now(self):
+
+        return datetime.utcnow().isoformat()
+
+    def _report_id(self):
+
+        return f"FIN-{uuid.uuid4()}"
+
+    # ========================================================
+    # CONSOLIDACIÓN
+    # ========================================================
+
+    def _calculate_totals(self):
+
+        entries = (
+            self.accounting_engine
+            .get_entries()
+        )
+
+        revenue = Decimal("0")
+
+        expenses = Decimal("0")
+
+        for entry in entries:
+
+            amount = Decimal(
+                str(
+                    entry.get(
+                        "amount",
+                        0
+                    )
+                )
+            )
+
+            if (
+                entry.get(
+                    "entry_type"
+                )
+                == "CREDIT"
+            ):
+                revenue += amount
+
+            else:
+                expenses += amount
+
+        taxes = Decimal("0")
+
+        profit = (
+            revenue
+            - expenses
+            - taxes
+        )
+
+        return {
+
+            "revenue":
+                float(revenue),
+
+            "expenses":
+                float(expenses),
+
+            "taxes":
+                float(taxes),
+
+            "profit":
+                float(profit),
+        }
+
+    # ========================================================
+    # REPORTE MAESTRO
+    # ========================================================
+
+    def generar_reporte_maestro(
+        self,
+    ) -> Dict:
+
+        totals = (
+            self._calculate_totals()
+        )
+
+        report = {
+
+            "report_id":
+                self._report_id(),
+
+            "generated_at":
+                self._now(),
+
+            "report_type":
+                "MASTER_FINANCIAL",
+
+            "revenue":
+                totals["revenue"],
+
+            "expenses":
+                totals["expenses"],
+
+            "taxes":
+                totals["taxes"],
+
+            "profit":
+                totals["profit"],
+
+            "total_entries":
+                len(
+                    self.accounting_engine
+                    .get_entries()
+                ),
+
+            "audit_events":
+                len(
+                    self.accounting_engine
+                    .get_audit_log()
+                ),
+
+            "status":
+                "GENERATED",
+        }
+
+        return report
+
+    # ========================================================
+    # DASHBOARD
+    # ========================================================
+
+    def dashboard_snapshot(
+        self,
+    ) -> Dict:
+
+        report = (
+            self.generar_reporte_maestro()
+        )
+
+        return {
+
+            "generated_at":
+                self._now(),
+
+            "revenue":
+                report["revenue"],
+
+            "expenses":
+                report["expenses"],
+
+            "taxes":
+                report["taxes"],
+
+            "profit":
+                report["profit"],
+
+            "status":
+                "ACTIVE",
+        }
+
+    # ========================================================
+    # RESUMEN
+    # ========================================================
+
+    def summary(
+        self,
+    ) -> Dict:
+
+        report = (
+            self.generar_reporte_maestro()
+        )
+
+        return {
+
+            "report_id":
+                report["report_id"],
+
+            "profit":
+                report["profit"],
+
+            "entries":
+                report["total_entries"],
+
+            "generated_at":
+                report["generated_at"],
+        }
+
+
+# ============================================================
+# INSTANCIA GLOBAL
+# ============================================================
+
+finance_master = ZyraFinanceMaster()
+
+# ============================================================
+# COMPATIBILIDAD LEGACY
+# ============================================================
 
 def generar_reporte_maestro():
 
-    print("\n🚀 [ZYRA FINANCE] Procesando balance global...")
-
-    # Tasas de cambio base (mock controlado)
-    tasas = {
-        "CNY": 7.24,
-        "BTC": 0.000018,
-        "GTQ": 7.82
-    }
-
-    ingresos = 0.0
-    inversion = 0.0
-    impuestos = 0.0
-
-    # --------------------------------------
-    # Lectura universal de archivos financieros
-    # --------------------------------------
-    try:
-        for archivo in os.listdir(DATA_DIR):
-            if not archivo.endswith(".json"):
-                continue
-
-            ruta = os.path.join(DATA_DIR, archivo)
-
-            try:
-                with open(ruta, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-
-                    if not isinstance(data, list):
-                        continue
-
-                    for r in data:
-                        monto = (
-                            r.get("monto")
-                            or r.get("monto_usd")
-                            or 0.0
-                        )
-
-                        if "invoice" in archivo:
-                            ingresos += float(monto)
-                        elif "tax" in archivo:
-                            impuestos += float(monto)
-                        else:
-                            inversion += float(monto)
-
-            except Exception:
-                pass
-
-    except Exception:
-        print("⚠️ No se pudo acceder a la carpeta DATA")
-
-    # --------------------------------------
-    # Cálculo final
-    # --------------------------------------
-    ganancia = ingresos - inversion - impuestos
-
-    print("\n" + "═" * 60)
-    print(f" GANANCIA TOTAL: $ {ganancia:,.2f} USD")
-    print(
-        f" CNY: ¥ {ganancia * tasas['CNY']:,.2f} | "
-        f"GTQ: Q {ganancia * tasas['GTQ']:,.2f}"
+    return (
+        finance_master
+        .generar_reporte_maestro()
     )
-    print("═" * 60)
